@@ -11,7 +11,7 @@ from dateutil.relativedelta import relativedelta
 app = FastAPI()
 
 
-def calculate_deposit(deposit: DepositModel) -> dict[str, Decimal]:
+def calculate_deposit(deposit: DepositModel) -> dict[str, float]:
     """
     Calculate deposits
     :param deposit: DepositData
@@ -22,7 +22,7 @@ def calculate_deposit(deposit: DepositModel) -> dict[str, Decimal]:
     current_date = datetime.strptime(deposit.date, "%d.%m.%Y")
     monthly_rate = Decimal(1 + deposit.rate / 12 / 100)
     current_amount *= monthly_rate
-    result[current_date.strftime("%d.%m.%Y")] = round(current_amount, 2)
+    result[current_date.strftime("%d.%m.%Y")] = float(round(current_amount, 2))
     for period in range(1, deposit.periods):
         next_month = current_date + relativedelta(months=1)
 
@@ -39,7 +39,7 @@ def calculate_deposit(deposit: DepositModel) -> dict[str, Decimal]:
                 next_month = next_month.replace(day=29)
         current_date = next_month
         current_amount *= monthly_rate
-        result[current_date.strftime("%d.%m.%Y")] = round(current_amount, 2)
+        result[current_date.strftime("%d.%m.%Y")] = float(round(current_amount, 2))
     return result
 
 
@@ -90,6 +90,6 @@ async def create_deposit(
             }
         ),
     ],
-) -> dict[str, Decimal]:
+) -> dict[str, float]:
     result = calculate_deposit(deposit)
     return result
