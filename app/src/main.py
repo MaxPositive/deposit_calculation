@@ -11,6 +11,18 @@ from dateutil.relativedelta import relativedelta
 app = FastAPI()
 
 
+def calculate_date(start_date: str, periods: int) -> str:
+    """
+    Calculate next date
+    :param start_date: first date
+    :param periods: number of periods
+    :return: date of next period
+    """
+    current_date = datetime.strptime(start_date, "%d.%m.%Y")
+    new_date = current_date + relativedelta(months=periods)
+    return new_date.strftime("%d.%m.%Y")
+
+
 def calculate_deposit(deposit: DepositModel) -> dict[str, float]:
     """
     Calculate deposits
@@ -24,22 +36,9 @@ def calculate_deposit(deposit: DepositModel) -> dict[str, float]:
     current_amount *= monthly_rate
     result[current_date.strftime("%d.%m.%Y")] = float(round(current_amount, 2))
     for period in range(1, deposit.periods):
-        next_month = current_date + relativedelta(months=1)
-
-        if next_month.month in [1, 3, 5, 7, 8, 10, 12]:
-            next_month = next_month.replace(day=31)
-        elif next_month.month in [4, 6, 9, 11]:
-            next_month = next_month.replace(day=30)
-        else:
-            if next_month.year % 4 != 0 or (
-                next_month.year % 100 == 0 and next_month.year % 400 != 0
-            ):
-                next_month = next_month.replace(day=28)
-            else:
-                next_month = next_month.replace(day=29)
-        current_date = next_month
+        current_date = calculate_date(deposit.date, period)
         current_amount *= monthly_rate
-        result[current_date.strftime("%d.%m.%Y")] = float(round(current_amount, 2))
+        result[current_date] = float(round(current_amount, 2))
     return result
 
 
